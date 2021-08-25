@@ -1,0 +1,11 @@
+[Unit]
+Description=Start Videos over rfid/ibeacon
+After=multi-user.target
+[Service]
+WorkingDirectory=/home/pi/bcontrol
+SyslogIdentifier=bcontrol
+ExecStart=/bin/bash -c "/home/pi/bcontrol/start_bcontrol.sh"
+User=pi
+Type=simple
+[Install]
+WantedBy=multi-user.target

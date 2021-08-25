@@ -1,0 +1,35 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block title %}bcontrol{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="container">
+    <a class="navbar-brand" href="#">bcontrol {{ hostname }}</a>
+</div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form class="form form-horizontal" method="post" role="form" action="/">
+        {{ form.hidden_tag() }}
+        {{ wtf.form_field(form.image_url) }}
+        {{ wtf.form_field(form.page_url) }}
+        {{ wtf.form_field(form.uuids) }}
+        {{ wtf.form_field(form.add) }}
+        {{ wtf.form_field(form.inrange) }}
+        {{ wtf.form_field(form.startrange) }}
+        {{ wtf.form_field(form.stoprange) }}
+        {{ wtf.form_field(form.timeout) }}
+        {{ wtf.form_field(form.submit, button_map={"submit": "primary"}) }}
+    </form>
+</div>
+{% endblock %}

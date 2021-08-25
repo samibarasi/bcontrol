@@ -1,0 +1,16 @@
+{
+    "add": false, 
+    "image_url": "file:///home/pi/bcontrol/media/test_image.png", 
+    "inrange": 1, 
+    "page_url": "file:///home/pi/bcontrol/media/test_video.mp4", 
+    "startrange": 500, 
+    "stoprange": 1000, 
+    "timeout": 5, 
+    "uuids": [
+        "a9407f30-f5f8-466e-aff9-25556b57fe6d", 
+        "88bcbf76-f2b4-4bb0-a982-906c16121ff7", 
+        "e6-85-b5-1a", 
+        "c6-7d-83-1a", 
+        "d6-dc-92-1e"
+    ]
+}

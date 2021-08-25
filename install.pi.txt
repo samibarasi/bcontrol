@@ -1,0 +1,129 @@
+Zeilen die mit # anfangen auf der Shell ausführen
+
+1. raspbian-lite image runterladen und entpacken
+https://downloads.raspberrypi.org/raspbian_lite_latest
+
+2. SD Karte in Laptop und unmounten
+# sudo diskutil unmountDisk <sd-card-device>
+
+3. Image auf Karte schreiben (Profi-Tip: statt /dev/disk<nummer> sollte man lieber /dev/rdisk<nummer> verwenden, dann geht es viel viel schneller)
+# dd bs=1m if=raspbian-lite-image of=<sd-card-device> conv=fsync 
+
+4. Karte im Laptop mounten (aus- und wieder einstecken)
+
+5. ssh-server aktivieren. In der Shell eingeben:
+# cd <pfad zur gemounteten boot partition der sd card>
+# touch ssh
+
+6. Karte unmounten und in den Pi stecken.
+
+7. Pi mit Netzwerkkabel booten.
+
+8. Der Pi holt sich per DHCP eine IP und ist unter "raspberrypi" verfügbar. SSH connecten:
+# ssh pi@raspberrypi
+(ggf. IP aus dem Router anzeigen lassen)
+(Passwort: raspberry)
+
+9. root werden und raspi-config starten
+# sudo su -
+# raspi-config
+
+10. Einstellungen anpassen:
+- Network Options:
+  - Hostname: z.B. pi01
+  - Wi-fi einstellen
+- Localisation Options:
+  - Change Locale: de_DE.UTF-8 UTF-8 und auf default setzen
+  - Timezone Europe/Berlin
+- Interface Options:
+  - SPI enable
+- Advanced Options
+  - Audio: sicherheitshalber auf "force HDMI" stellen.
+-> finish -> reboot
+
+11. SSH (Netzwerkkabel drin lassen) und gleich Passwort für user 'pi' ändern
+# ssh pi@pi01
+# passwd
+
+13. Debian Pakete updaten/upgraden und erstmal 'vim' installieren (der default 'vi' geht garnicht)
+# apt update
+# apt upgrade
+# apt install vim
+
+14. WLAN fertig einrichten:
+- Energiesparmodus für WLAN deaktivieren:
+# sudo vi /etc/network/interfaces
+Die 2 Zeilen am Ende einfügen:
+pre-up iw dev wlan0 set power_save off
+post-down iw dev wlan0 set power_save on
+
+15. mit WLAN booten und wieder per ssh einloggen
+# reboot
+Vor dem Booten Netzwerkkabel ziehen, ansonsten holt er sich anscheinend keine IP über DHCP WLAN
+
+16. Benötigte Debian Pakete installieren
+# sudo su -
+# apt install git python-pip python-dev libbluetooth-dev libcap2-bin libdbus-1-dev libdbus-glib-1-dev omxplayer fbi
+
+17. python pip auf aktuellen Stand bringen (als root)
+# pip install --upgrade pip
+(danach muss man sich ggf. kurz aus und wieder einloggen, damit pip funktioniert)
+
+18. Benötigten Python Pakete installieren (als root, kann bisschen dauern)
+# pip install beacontools[scan] numpy numpy_ringbuffer flask flask_wtf flask_bootstrap flask_apscheduler omxplayer-wrapper pychrome
+- Ein Paket gibts nicht in pip, deswegen von github installieren:
+# git clone https://github.com/lthiery/SPI-Py.git
+# cd SPI-Py
+# python setup.py build && python setup.py install
+# cd ..
+
+19. SSH-Key erstellen als user 'pi' (Das erstellte Keypair kann dann auch auf allen anderen Servern verwendet werden)
+CTRL-D damit wieder "pi@pi01" steht
+# ssh-keygen
+3 x ENTER drücken (default pfad und keine passphrase)
+
+20. Public Key rauskopieren und im Gitlab eintragen.
+# cat .ssh/id_rsa.pub
+- kompletten Key in Zwischenablage kopieren
+- http://karlsruhe.nakedtoast.de:81/profile/keys im Browser aufrufen
+- Key reinpasten, Title vergeben und "Add Key" klicken
+
+21. Als User 'pi' im User-Verzeichnis bcontrol klonen
+# cd
+# git clone git@karlsruhe.nakedtoast.de:nakedtoast/bcontrol.git
+
+22. Permissions setzen
+# sudo setcap 'cap_net_raw,cap_net_admin+eip' $(readlink -f $(which python))
+# sudo setcap 'cap_net_raw,cap_net_admin+eip' $(readlink -f $(which hcitool))
+# sudo setcap 'cap_net_raw,cap_net_admin+eip' $(readlink -f $(which hciconfig))
+
+23. bcontrol script testen
+# cd bcontrol
+# ./bcontrol --rfid --omxplayer
+
+24. systemd liest beim starten das file systemd.conf ein, wo drin steht mit welchem Parametern bcontrol.py gestartet werden soll.
+Diese File ist nicht im GIT.
+Beispiel: starte mit --rfid --omxplayer
+# echo "BCONTROL_START_PARAMS='--rfid --omxplayer'" > systemd.conf
+
+25. systemd verlinken und starten
+# sudo su -
+# cd /etc/systemd/system
+# ln -s /home/pi/bcontrol/bcontrol.service .
+# systemctl daemon-reload
+# system bcontrol start
+
+26. nach einem reboot soll bcontrol automatisch starten. bcontrol beim Booten starten:
+# systemctl enable bcontrol
+
+27. bcontrol schreibt in /etc/syslog. Um sich das logfile anzuschauen, folgendes in einer SSH session eingeben
+# journalctl -u bcontrol (mit SHIFT-G and Ende springen)
+# journalctl -f -u bcontrol (gleiche wie tail -f)
+
+28. Status anzeigen stop/start/restart
+# service bcontrol status
+# service bcontrol stop
+# service bcontrol start
+# service bcontrol restart
+
+99. ODER DAS FERTIGE IMAGE VERWENDEN :P
